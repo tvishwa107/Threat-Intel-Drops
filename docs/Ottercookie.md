@@ -3,7 +3,7 @@
 For this round of threat hunting using OSINT, we're starting off with some IOCs from threatfox associated with the ContagiousInterview campaign, and shaking off some rust. There's a new OSINT platform called Modat, and we're going to use Modat for a good portion of our work.
 
 
-Click here to head to the [IOCs](#IOCs)! But remember, the devil is in the details...  
+Click here to head to the [iocs](#iocs)! But remember, the devil is in the details...  
 
 
 An important thing to remember is that each one of these OSINT engines (Censys, shodan, fofa, Modat, etc.) scans at a different time, so it's possible that no single engine has the entire picture - which is why we often pivot between engines, and update what we find as we go on.
@@ -130,7 +130,7 @@ This, overall, is pretty comprehensive. If you so desired, there are other IOCs 
 Feel free to play around and find more interesting stuff!
 
 
-#IOCs:
+# IOCs:
 **High Confidence**:  
 167.88.167.54, 107.189.22.20, 216.126.225.243, 104.194.153.144, 216.126.237.163, 172.86.123.37, 107.189.20.237, 107.189.20.115, 144.172.89.180, 172.86.73.27, 216.126.239.233, 144.172.116.178, 104.194.134.213, 144.172.117.220, 144.172.97.36, 144.172.116.22
 
