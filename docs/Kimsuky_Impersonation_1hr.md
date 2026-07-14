@@ -2,7 +2,7 @@
 
 So, back to a favorite - KR APT! This time, the goal was to only post what I could find in an hour, just to illustrate how much CAN be done once you've collated enough data.
 
-Source of IOCs - [An excellent blog by Synaptic Systems] (https://blog.synapticsystems.de/inside-kimsukys-chm-tradecraft-multi-stage-execution-and-selective-payload-delivery/)
+Source of IOCs - [An excellent blog by Synaptic Systems](https://blog.synapticsystems.de/inside-kimsukys-chm-tradecraft-multi-stage-execution-and-selective-payload-delivery/)
 
 
 ``` py title="Initial IOCs" 
