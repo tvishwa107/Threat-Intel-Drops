@@ -4,6 +4,7 @@ For today's quick one hour hunt, we'll look at some Iran-associated APTs. Our pr
 
 
 There are a lot of interesting features on Modat, so that will be our primary source for the investigation. 
+As always, you do have the option of skipping to the [IOCs](#iocs). 
 
 ```py title=""
 72.56.34[.]52
@@ -35,7 +36,7 @@ There are a lot of interesting features on Modat, so that will be our primary so
 188.119.149[.]200
 ```
 
-We're also going to refer to this table for some additional information and domain info. 
+We're also going to refer to this table for some additional information and domain info. The image below contains the commonly used subdomains under the '.sbs' TLD. 
 
 ![Domains related to this campaign](img/Group-IB_Domains.png)
 
@@ -89,17 +90,22 @@ bridge-eu.tiktok-u.sbs
 
 
 Now, there are a few other things that are interesting, and possibly worth exploring:
-1. A set of URLs that follow a similar setup with a common Issuer CN, but a different subdomain off the .sbs tld (cl1.ghostik.sbs, italy.ghostik.sbs, kdn.ghostik.sbs, belgium.ghostik.sbs, crix.ghostik.sbs), and also using the same port 2222 with port 80/56777 combos. None of these seem to be confirmed to be malware, but the pattern is interesting. 
-2. lxnora.com, which is one of the set above, has a very obvious fake certificate
-```
-Signature Algorithm:
-Issuer: C=US  ST=Denial  L=Springfield  O=Dis  CN=lxnora.com
-```
-Being in the State of Denial with the values of O=Dis clearly indicates a sense of humor along with some automated cert generation (O=Dis is a common default value), and the VT has a malicious .eml file (16 hits) communicating with this URL. Likely mal, not entirely certain it's this exact campaign. 
 
-3. A few other candidates show up searching on the headers, which are inconclusive (asn.number=59711 asn.org="HZ Hosting Ltd" port=2222 protocol=unknown, for the curious). This is still a good way to generate candidates and to get a feel for what different hosts offer to their customers, whether it be a full /24 subnet at a time or the use of non-standard ports. 
+1. A set of URLs that follow a similar setup with a common Issuer CN, but a different subdomain off the `.sbs` tld (`cl1.ghostik.sbs`, `italy.ghostik.sbs`, `kdn.ghostik.sbs`, `belgium.ghostik.sbs`, `crix.ghostik.sbs`), and also using the same port 2222 with port 80/56777 combos. None of these seem to be confirmed to be malware, but the pattern is interesting.
+
+2. `lxnora.com`, which is one of the set above, has a very obvious fake certificate:
+
+    ```text
+    Signature Algorithm:
+    Issuer: C=US  ST=Denial  L=Springfield  O=Dis  CN=lxnora.com
+    ```
+
+    Being in the State of Denial with the values of `O=Dis` clearly indicates a sense of humor along with some automated cert generation (`O=Dis` is a common default value), and the VT has a malicious `.eml` file (16 hits) communicating with this URL. Likely mal, not entirely certain it's this exact campaign. 
+
+3. A few other candidates show up searching on the headers, which are inconclusive (`asn.number=59711 asn.org="HZ Hosting Ltd" port=2222 protocol=unknown`, for the curious). This is still a good way to generate candidates and to get a feel for what different hosts offer to their customers, whether it be a full /24 subnet at a time or the use of non-standard ports.
 
 
+# IOCs:
 ```py title="High Confidence"
 45.202.254.247 
 46.8.21.174 
