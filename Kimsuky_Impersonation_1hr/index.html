@@ -329,7 +329,7 @@
   <span class="md-ellipsis">
     
   
-    APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities
+    APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
   
 
     
@@ -384,27 +384,27 @@
 <div class="language-py highlight"><span class="filename">Initial IOCs</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="mf">51.79.185.184</span>  
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="mf">118.194.249.91</span>  
 </span></code></pre></div>
-<p><img alt="118.194.249.91 on Shodan" src="../img/SHODAN_443.png" /></p>
+<p><figure id="_figure-1"><img alt="118.194.249.91 on Shodan" src="../img/SHODAN_443.png"><figcaption>Figure 1: 118.194.249.91 on Shodan</figcaption></figure></p>
 <p>118.194.249.91 has an interesting cert - Subject: CN=user-kakao.login-accounts.dynv6.net on cert, but the redirect is to https[:]//invoice.naver.com</p>
-<p><div class="language-py highlight"><span class="filename">Modat query</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">mmh3</span><span class="o">=</span><span class="mi">725371633</span><span class="p">)</span>
+<p></p><div class="language-py highlight"><span class="filename">Modat query</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">web</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">mmh3</span><span class="o">=</span><span class="mi">725371633</span><span class="p">)</span>
 </span></code></pre></div>
-This returns 152.32.138.15 as a new IOC.</p>
+This returns 152.32.138.15 as a new IOC.
 <p>Kimsuky have a trademark message that shows up on port 443 of their services. I've seen it for at least the last one year and so have others. </p>
-<div class="language-py highlight"><span class="filename">Shodan Kimsuky query</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">http</span><span class="o">.</span><span class="n">html</span><span class="p">:</span><span class="s2">&quot;Million OK !!!!&quot;</span> 
+<div class="language-py highlight"><span class="filename">Shodan Kimsuky query</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">http</span><span class="o">.</span><span class="n">html</span><span class="p">:</span><span class="s2">"Million OK !!!!"</span> 
 </span></code></pre></div>
 <p>This returns another new IOC - 176.111.220.168.
 Since Shodan displays the JARM, we can use that on Modat.</p>
-<div class="language-py highlight"><span class="filename">Modat query #2</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">443</span> <span class="n">service</span><span class="o">=</span><span class="s2">&quot;http&quot;</span> <span class="n">transport</span><span class="o">=</span><span class="s2">&quot;tcp&quot;</span> <span class="n">cert</span><span class="o">.</span><span class="n">subject</span><span class="o">.</span><span class="n">cn</span><span class="o">=</span><span class="s2">&quot;*kakao*&quot;</span><span class="p">)</span> <span class="n">country</span><span class="o">=</span><span class="s2">&quot;KR&quot;</span> <span class="n">cert</span><span class="o">.</span><span class="n">jarm</span><span class="o">=</span><span class="mi">2</span><span class="n">ad2ad16d2ad2ad00042d42d00000061256d32ed7779c14686ad100544dc8d</span>  
+<div class="language-py highlight"><span class="filename">Modat query #2</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">443</span> <span class="n">service</span><span class="o">=</span><span class="s2">"http"</span> <span class="n">transport</span><span class="o">=</span><span class="s2">"tcp"</span> <span class="n">cert</span><span class="o">.</span><span class="n">subject</span><span class="o">.</span><span class="n">cn</span><span class="o">=</span><span class="s2">"*kakao*"</span><span class="p">)</span> <span class="n">country</span><span class="o">=</span><span class="s2">"KR"</span> <span class="n">cert</span><span class="o">.</span><span class="n">jarm</span><span class="o">=</span><span class="mi">2</span><span class="n">ad2ad16d2ad2ad00042d42d00000061256d32ed7779c14686ad100544dc8d</span>  
 </span></code></pre></div>
-<p>Our new IOC is 158.247.224.179, which has two big indicators:<br />
+<p>Our new IOC is 158.247.224.179, which has two big indicators:<br>
 1. The ASN/org: AS 20473, The Constant Company, which is a Kimsuky favorite
 2. domains seen on this IP - kakao.com-udoclist.dns.army</p>
 <p>Let's try this one :</p>
-<p><div class="language-py highlight"><span class="filename">Modat query #3</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">443</span> <span class="n">service</span><span class="o">=</span><span class="s2">&quot;http&quot;</span> <span class="n">transport</span><span class="o">=</span><span class="s2">&quot;tcp&quot;</span> <span class="n">cert</span><span class="o">.</span><span class="n">jarm</span><span class="o">=</span><span class="mi">2</span><span class="n">ad2ad16d2ad2ad00042d42d00000061256d32ed7779c14686ad100544dc8d</span> <span class="n">cert</span><span class="o">.</span><span class="n">subject</span><span class="o">.</span><span class="n">cn</span><span class="o">=</span><span class="s2">&quot;*dns.army&quot;</span><span class="p">)</span>
+<p></p><div class="language-py highlight"><span class="filename">Modat query #3</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">443</span> <span class="n">service</span><span class="o">=</span><span class="s2">"http"</span> <span class="n">transport</span><span class="o">=</span><span class="s2">"tcp"</span> <span class="n">cert</span><span class="o">.</span><span class="n">jarm</span><span class="o">=</span><span class="mi">2</span><span class="n">ad2ad16d2ad2ad00042d42d00000061256d32ed7779c14686ad100544dc8d</span> <span class="n">cert</span><span class="o">.</span><span class="n">subject</span><span class="o">.</span><span class="n">cn</span><span class="o">=</span><span class="s2">"*dns.army"</span><span class="p">)</span>
 </span></code></pre></div>
-That yields 118.194.249.112.  </p>
+That yields 118.194.249.112.  
 <p>Now, for one last place to query, let's try urlscan. </p>
-<div class="language-py highlight"><span class="filename">Urlscan query</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">page</span><span class="o">.</span><span class="n">url</span><span class="p">:</span><span class="o">*.</span><span class="n">dns</span><span class="o">.</span><span class="n">army</span>\<span class="o">/</span> <span class="n">country</span><span class="p">:</span><span class="s2">&quot;KR&quot;</span>  
+<div class="language-py highlight"><span class="filename">Urlscan query</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">page</span><span class="o">.</span><span class="n">url</span><span class="p">:</span><span class="o">*.</span><span class="n">dns</span><span class="o">.</span><span class="n">army</span>\<span class="o">/</span> <span class="n">country</span><span class="p">:</span><span class="s2">"KR"</span>  
 </span></code></pre></div>
 <p>So many urls with this pattern, several flagged, and several more. They're all mostly on the same 1-2 ASNs, which we've seen throughout this hunt. </p>
 <p>Urlscan results: 118.193.68.242, 118.193.68.11, 158.247.219.150, 123.58.200.69</p>

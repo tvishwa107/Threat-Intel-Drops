@@ -329,7 +329,7 @@
   <span class="md-ellipsis">
     
   
-    APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities
+    APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
   
 
     
@@ -411,15 +411,15 @@ As always, you do have the option of skipping to the <a href="#iocs">IOCs</a>. <
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="mf">188.119.149</span><span class="p">[</span><span class="o">.</span><span class="p">]</span><span class="mi">200</span>
 </span></code></pre></div>
 <p>We're also going to refer to this table for some additional information and domain info. The image below contains the commonly used subdomains under the '.sbs' TLD. </p>
-<p><img alt="Domains related to this campaign" src="../img/Group-IB_Domains.png" /></p>
+<p><figure id="_figure-1"><img alt="Domains related to this campaign" src="../img/Group-IB_Domains.png"><figcaption>Figure 1: Domains related to this campaign</figcaption></figure></p>
 <p>Starting with one of these nodes, we can see port 2222, 80, and 56777. 
 Normally, port 56777 as an SSH port could offer an interesting pivot point, but even though the banner is actually the same across all the nodes, the ssh server key fingerprint is unique to each, so the threat actors have been a little more careful with the Opsec there. </p>
-<p><img alt="Ports, Domains and Banners on 185.253.116.81" src="../img/Modat_56777_ssh.png" /></p>
+<p><figure id="_figure-2"><img alt="Ports, Domains and Banners on 185.253.116.81" src="../img/Modat_56777_ssh.png"><figcaption>Figure 2: Ports, Domains and Banners on 185.253.116.81</figcaption></figure></p>
 <p>We can also see port 2222 running TLS, and that means a cert that could be reused. However, they've been quite thorough - the serial number is unique, the Subject CN varies from node to node, and even though the majority of these nodes are running port 80/2222/56777, but the most useful port, 443 does not seem to be visible. </p>
 <p>However, there is ONE interesting pivot that works - The issuer CN, which has been reused. This suggests that the tooling used modifies most parts of the cert (eg. random subject common name), but uses the same issuer common name. </p>
 <p>A common way this is done is using a master CA keypair, which is used to sign all the servers deployed in this cluster.
 This can be used to spin up VPS nodes quickly.</p>
-<div class="language-py highlight"><span class="filename">The query that gets them all</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">2222</span> <span class="n">protocol</span><span class="o">=</span><span class="s2">&quot;unknown&quot;</span> <span class="n">transport</span><span class="o">=</span><span class="s2">&quot;tcp&quot;</span> <span class="n">tls</span><span class="o">.</span><span class="n">issuer</span><span class="o">.</span><span class="n">common_name</span><span class="o">=</span><span class="s2">&quot;64cmXWWuUaT6bBXZ_Je1XnTWa_cz&quot;</span><span class="p">)</span>
+<div class="language-py highlight"><span class="filename">The query that gets them all</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">same_service</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">2222</span> <span class="n">protocol</span><span class="o">=</span><span class="s2">"unknown"</span> <span class="n">transport</span><span class="o">=</span><span class="s2">"tcp"</span> <span class="n">tls</span><span class="o">.</span><span class="n">issuer</span><span class="o">.</span><span class="n">common_name</span><span class="o">=</span><span class="s2">"64cmXWWuUaT6bBXZ_Je1XnTWa_cz"</span><span class="p">)</span>
 </span></code></pre></div>
 <p>We get around 30 results. 
 Excluding the ones that are already known, we get these:</p>
@@ -433,9 +433,9 @@ Excluding the ones that are already known, we get these:</p>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="mf">185.253.116.188</span>
 </span></code></pre></div>
 <p>There's another query we can run to identify a few more domains using the FQDNS.</p>
-<div class="language-py highlight"><span class="filename">FQDNS Query</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fqdn</span><span class="o">=</span><span class="s2">&quot;*.tiktok-u.sbs&quot;</span> <span class="ow">or</span> <span class="n">fqdn</span><span class="o">=</span><span class="s2">&quot;*.locat.sbs&quot;</span>
+<div class="language-py highlight"><span class="filename">FQDNS Query</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">fqdn</span><span class="o">=</span><span class="s2">"*.tiktok-u.sbs"</span> <span class="ow">or</span> <span class="n">fqdn</span><span class="o">=</span><span class="s2">"*.locat.sbs"</span>
 </span></code></pre></div>
-<p><img alt="DNS Record Search" src="../img/Modat_DNS_Record_Srch.png" /></p>
+<p><figure id="_figure-3"><img alt="DNS Record Search" src="../img/Modat_DNS_Record_Srch.png"><figcaption>Figure 3: DNS Record Search</figcaption></figure></p>
 <p>This returns a handful of other domains that were not found by Group-IB or Securelist before them. </p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>jp3.locat.sbs
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>hr-bridge.locat.sbs 

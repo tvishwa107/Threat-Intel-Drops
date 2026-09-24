@@ -21,7 +21,7 @@
     
     
       
-        <title>APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities - intel drops</title>
+        <title>APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities - intel drops</title>
       
     
     
@@ -70,7 +70,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#apt-c-60-attacks-japanese-organizations-using-new-spyglace-backdoor-capabilities" class="md-skip">
+        <a href="#apt-c-60-attacks-japanese-organizations-using-spyglace-backdoor-capabilities" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities
+              APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
             
           </span>
         </div>
@@ -326,7 +326,7 @@
   <span class="md-ellipsis">
     
   
-    APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities
+    APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
   
 
     
@@ -344,7 +344,7 @@
   <span class="md-ellipsis">
     
   
-    APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities
+    APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
   
 
     
@@ -786,34 +786,34 @@
 
 
 
-<h1 id="apt-c-60-attacks-japanese-organizations-using-new-spyglace-backdoor-capabilities">APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities</h1><p style="color:#bdbdbd"><i>Estimated time to read: 8 minutes</i></p>
+<h1 id="apt-c-60-attacks-japanese-organizations-using-spyglace-backdoor-capabilities">APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities</h1><p style="color:#bdbdbd"><i>Estimated time to read: 8 minutes</i></p>
 
 <h2 id="introductory-analysis">Introductory Analysis:</h2>
-<p>This edition of threat hunting/analysis will be delving into reverse engineering some malware we were able to obtain - SpyGlace v3.1.15. SpyGlace is a backdoor attributed to APT-C-60, targeting Japanese entities. The objective of this analysis will be restricted to purely static reversing, so minimal dynamic data will be obtained in this way, only referencing public sandboxing for relevant data. </p>
+<p>This edition of threat hunting/analysis will be delving into reverse engineering some malware we were able to obtain - SpyGlace v3.1.15. SpyGlace is a Windows backdoor attributed to APT-C-60, targeting Japanese entities. The objective of this analysis will be restricted to purely static reversing, so minimal dynamic data will be obtained in this way, only referencing public sandboxing for relevant data. </p>
 <p>Appendix E of the source blog: <a href="https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2026.html">https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2026.html</a>, contains a number of github pages which are still active, and I was able to obtain a number of the files. </p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>https[:]//cdn.jsdelivr[.]net/gh/mei1990789/class125/
 </span></code></pre></div>
-<p><img alt="Jsdeliver OpenDir" src="../img/jsdelivr_opendir.png" /></p>
+<p><figure id="_figure-1"><img alt="Jsdeliver OpenDirectory Containing SpyGlace Artifacts" src="../img/jsdelivr_opendir.png"><figcaption>Figure 1: Jsdeliver OpenDirectory Containing SpyGlace Artifacts</figcaption></figure></p>
 <p>This opendir contains several files - one base64 encoded payload in sub7/contributing.txt (449.49KB) - this eventually decodes to SpyGlace v3.1.15. </p>
 <p>One of the files I captured had a sha256 that matched a known one from the JP cert blog, but the file itself was garbled/encoded data. BUT the bytes repeated, which determined that this file was XOR-encrypted, and the 20 byte repetition suggested that was the length of the key. The XOR key was appended to the head of the file ("sgznqhtgnghvmzxponum"), and when XOR-ed, we see the first few bytes are 4D 5A 90 00 (MZ header).</p>
 <h2 id="technical-overview-spyglace-v3115-evolution">Technical Overview: SpyGlace v3.1.15 Evolution</h2>
-<p>SpyGlace contains functionalities to perform screen captures, kill existing processes, exfiltrate system data, and file system wiping. It also uses a named pipe for real-time command dispatch from the C2 server, and supports loading additional DLL beacons from the C2 with other unnamed capabilities. Where JPCERT's July 2026 report found no major functional differences across v3.1.15–3.1.18, my reverse engineering of this v3.1.15 sample surfaced a few features that, to the best of my knowledge, don't appear in any public analyses.</p>
+<p>SpyGlace contains functionalities to perform screen captures, kill existing processes, exfiltrate system data, and file system wiping. It also uses a named pipe for real-time command dispatch from the C2 server, and supports loading additional DLL beacons from the C2 with other unnamed capabilities. Where JPCERT's July 2026 report found no major functional differences across v3.1.15–3.1.18, my analysis of this v3.1.15 sample surfaced a few features that, to the best of my knowledge, don't appear in any public analyses, new or old.</p>
 <h3 id="key-findings">Key Findings:</h3>
 <ol>
 <li>
-<p>Interactive Named-Pipe IPC (\\.\pipe\wincmd_*): Decouples command execution from single-shot cmd.exe /c processes, maintaining persistent standard I/O streams across commands. This has not been reported previously. </p>
+<p>Interactive Named-Pipe IPC (\\.\pipe\wincmd_*): Decouples command execution from single-shot cmd.exe /c processes, maintaining persistent standard I/O streams across commands. </p>
 </li>
 <li>
 <p>Structured C2 Wire Protocol: Employs parameter multiplexing across three distinct functional pipelines (command execution logs, single-transaction screenshots, and multi-part chunked file uploads).</p>
 </li>
 <li>
-<p>Strict Staging Constraints: Requires secondary stages from the C2 to pass an explicit .ace container check, multi-layer decoding (RC4 → Base64 → hex decode → in-place byte reversal), deliberately breaking tools that expect standard PE/shellcode byte ordering in transit.</p>
+<p>Strict Staging Constraints: Requires secondary payloads from the C2 to pass an explicit .ace filename check, multi-layer decoding (RC4 → Base64 → hex decode → in-place byte reversal), deliberately breaking tools that expect standard PE/shellcode byte ordering in transit.</p>
 </li>
 <li>
 <p>Can use fileless invocation using CreateStreamOnHGlobal, which is loaded dynamically from ole32.dll, alternatively staging payloads briefly through a fixed temp path (%temp%\wcts66889.tmp) before file deletion. Each loaded plugin has an 'extension' export to start, and a 'stopextension' export used to kill the DLL. </p>
 </li>
 <li>
-<p>Disguised Companion Plugins (Protect.d): Dynamically loads a hidden companion library under %LocalAppData%\Microsoft\Protect\Protect.d to orchestrate surveillance features like screen capture.</p>
+<p>Disguised Companion Plugins (Protect.db): Dynamically loads a hidden companion library dropped to %LocalAppData%\Microsoft\Protect\Protect.db to orchestrate surveillance features like screen capture.</p>
 </li>
 <li>
 <p>The sample resolves all Windows APIs via manual PEB/export-table walking and encrypted string comparisons, not the IAT - only KERNEL32.dll appears as a static import. </p>
@@ -847,19 +847,19 @@
 </ul>
 <p>It uses PEB-walking and Export-Directory Parsing to dynamically resolve Windows APIs at runtime without exposing values in its Import Address Table. Since this is a 64-bit program, the call to gs:[0x60] points to the PEB, and offset 0x18 targets LDR_DATA. Offset 0x20 into LDR_DATA yields the InMemoryOrderModuleList, which is traversed to iterate over every loaded module in memory. This is compared against an encoded version of the target DLL's name, which is decrypted strictly at runtime.</p>
 <p>The dynamically imported DLLs include: 
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ole32.dll 
+</p><div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ole32.dll 
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>winhttp.dll  
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>advapi32.dll  
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>shlwapi.dll 
-</span></code></pre></div></p>
+</span></code></pre></div>
 <p>Functions imported from these DLLs are obfuscated using arithmetic ciphers of the form (c⊕key)−sub:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Plaintext(c)=((c⊕3)−1)  
+</p><div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Plaintext(c)=((c⊕3)−1)  
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>or 
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Plaintext(c)=((c⊕2)-1) 
-</span></code></pre></div></p>
+</span></code></pre></div>
 <p>Notably, for winhttp.dll exports, SpyGlace employs a pairwise consonant-transposition cipher (e.g., [ilJvvrSrel decodes to WinHttpOpen, and [ilJvvrWevSrvisl decodes to WinHttpSetOption). </p>
 <h4 id="environmental-fingerprinting-persistence">Environmental Fingerprinting &amp; Persistence:</h4>
-<p>Multiple evasion checks query the registry to fingerprint the host environment:</p>
+<p>Multiple evasion checks query the Windows registry to fingerprint the host environment, these are also used as part of the beacon to Statcounter:</p>
 <ul>
 <li>Processor Name
 "HARDWARE\DESCRIPTION\System\CentralProcessor\0", "ProcessorNameString"</li>
@@ -872,19 +872,19 @@
 <li>Registry checks for Operating System including Service Pack Level
 "CSDVersion", "InstallDate", "ProductName"</li>
 </ul>
-<p>The malware writes itself to registry autostart keys to establish persistence and drops its internal version string (v3.1.15) as a registry value.</p>
-<p><img alt="Establishing Persistence Through Registry" src="../img/persistence.png" /></p>
+<p>The malware writes itself to registry autostart keys to establish persistence and drops its internal version string (v3.1.15) as a registry value - which are artifacts worth looking for.</p>
+<p><figure id="_figure-2"><img alt="Establishing Persistence Through Registry" src="../img/persistence.png"><figcaption>Figure 2: Establishing Persistence Through Registry</figcaption></figure></p>
 <h4 id="network-communication">Network Communication:</h4>
 <p>SpyGlace initiates network communication via the following sequence: </p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>1. Egress IP Profiling: Connects to api.ipify.org over TLS to retrieve the host&#39;s public IP address before staging check-ins. 
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>1. Egress IP Profiling: Connects to api.ipify.org over TLS to retrieve the host's public IP address before staging check-ins. 
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>2. StatCounter Telemetry Channel: Retains protocol impersonation of legitimate tracking pixels to blend into analytics traffic. 
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Format: /&lt;project_id&gt;/0/&lt;security_code&gt;/1/ 
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>3. The core payload reaches out to an origin C2 - 31.58.136.207 (Virustotal confirms this,tagged by JP-cert). Specifically, it cycles through several ASP mesh pages hosted within the /gd5jc6/ directory:
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Active C2 endpoints: x66hjl.asp, fx72rf.asp, guehry.asp, dmd4n2.asp 
 </span></code></pre></div>
-<p><img alt="Statcounter Telemetry Beacon" src="../img/statc_beacon.png" /></p>
-<p><img alt="Spyglace C2 Endpoints" src="../img/spyglace_c2_beacons.png" /></p>
-<p>During request construction, the implant invokes WinHttpSetOption on the active request handle (HINTERNET) with option 0x1f (WINHTTP_OPTION_SECURITY_FLAGS) and a value mask of 0x3300, which ignores certificate validity issues and communicates through any interception proxies. </p>
+<p><figure id="_figure-3"><img alt="Statcounter Telemetry Beacon" src="../img/statc_beacon.png"><figcaption>Figure 3: Statcounter Telemetry Beacon</figcaption></figure></p>
+<p><figure id="_figure-4"><img alt="Spyglace C2 Endpoints" src="../img/spyglace_c2_beacons.png"><figcaption>Figure 4: Spyglace C2 Endpoints</figcaption></figure></p>
+<p>During request construction, the implant invokes WinHttpSetOption on the active request handle, ignoring certificate validity issues and communicating through any interception proxies using option 0x1f (WINHTTP_OPTION_SECURITY_FLAGS) and a value mask of 0x3300. </p>
 <h4 id="c2-communication-protocols">C2 Communication Protocols:</h4>
 <p>We observed 3 distinct dispatch mechanisms based on the C2 communication type: 
 - System Command Execution &amp; Progress Logging 
@@ -897,26 +897,26 @@ c002 = Deterministically generated hardware/system fingerprint MD5
 c003 = Action Verb 
 c004 = RC4 encrypted log/base64 filename </p>
 <p>"&amp;c007=true" is appended only in case of exfiltration.</p>
-<p><img alt="Exfiltration of Timestamped Screenshots" src="../img/screen_shot_exfil.png" /></p>
+<p><figure id="_figure-5"><img alt="Exfiltration of Timestamped Screenshots" src="../img/screen_shot_exfil.png"><figcaption>Figure 5: Exfiltration of Timestamped Screenshots</figcaption></figure></p>
 <h4 id="interactive-shell">Interactive Shell:</h4>
 <p>CreateProcessW is called for cmd.exe /c with the STARTUPINFO struct modified so that hStdInput, hStdOutput, and hStdError are bound directly to the \.\pipe\wincmd_<em> handle. This sets up the interactive C2 shell.
 The inclusion of attach and detach allows the operator to maintain persistent standard input/output streams via named pipes (\.\pipe\wincmd_</em>) without repeatedly spawning cmd.exe processes. To my knowledge, the inclusion of named pipes is something that has not been previously reported upon for SpyGlace. </p>
-<p><img alt="SpyGlace Named Pipe" src="../img/spyglace_named_pipe.png" /></p>
+<p><figure id="_figure-6"><img alt="SpyGlace Named Pipe" src="../img/spyglace_named_pipe.png"><figcaption>Figure 6: SpyGlace Named Pipe</figcaption></figure></p>
 <p>SpyGlace is also able to wipe a directory or file as needed after exfiltration, and leaves system files so as not to disrupt ordinary operations.</p>
-<p><img alt="System Wipe Functionality" src="../img/file_identify_recurse_delete.png" /></p>
+<p><figure id="_figure-7"><img alt="System Wipe Functionality" src="../img/file_identify_recurse_delete.png"><figcaption>Figure 7: System Wipe Functionality</figcaption></figure></p>
 <h4 id="staging-payload-refinements">Staging &amp; Payload Refinements:</h4>
-<p>Before loading secondary modules or executing downloaded tasks, the binary parses the filename, performs a reverse search for the extension delimiter (.), and enforces an explicit match against .ace. Any stage not bearing the .ace extension is discarded. This .ace file is then extracted and inner .dll, .dat, .exe, .db files can be run as additional plugins/stages using rundll32. The malware also supports fileless memory loading for remote PowerShell scripts.</p>
-<p><img alt="Functionality to Run DLLs" src="../img/run_dll_plugin.png" /></p>
-<p><img alt="Run powershell scripts in-memory" src="../img/run_powershell.png" /></p>
-<p>For desktop surveillance, the malware targets %LocalAppData%\Microsoft\Protect\Protect.d. It loads a specific DLL via LoadLibraryW, and calls unmanaged export "mssc1". The resulting raw screen capture is saved as <YYYYMMDD_HHMMSS>.jpg, encrypted, and posted to the C2.</p>
-<p><img alt="Protect.d DLL uses to perform screencaptures" src="../img/screencap_dll_protect_d.png" /></p>
+<p>Before loading secondary modules or executing downloaded tasks, the binary parses the filename, performs a reverse search for the extension delimiter (.), and enforces an explicit match against .ace. Any stage not bearing the .ace extension is discarded. Inner .dll, .dat, .exe, .db files can be run as additional plugins/stages using rundll32. The malware also supports fileless memory loading for remote PowerShell scripts.</p>
+<p><figure id="_figure-8"><img alt="Functionality to Run DLLs" src="../img/run_dll_plugin.png"><figcaption>Figure 8: Functionality to Run DLLs</figcaption></figure></p>
+<p><figure id="_figure-9"><img alt="Run powershell scripts in-memory" src="../img/run_powershell.png"><figcaption>Figure 9: Run powershell scripts in-memory</figcaption></figure></p>
+<p>For desktop surveillance, the malware targets %LocalAppData%\Microsoft\Protect\Protect.db. It loads a specific DLL via LoadLibraryW, and calls unmanaged export "mssc1". The resulting raw screen capture is saved as <yyyymmdd_hhmmss>.jpg, encrypted, and posted to the C2.</yyyymmdd_hhmmss></p>
+<p><figure id="_figure-10"><img alt="Protect.db DLL uses to perform screencaptures" src="../img/screencap_dll_protect_d.png"><figcaption>Figure 10: Protect.db DLL uses to perform screencaptures</figcaption></figure></p>
 <p>The secondary payloads are decoded using a full RC4 implementation that SpyGlace contains, where the command/response data is encrypted, then converted to Base64, and then undergo hex decoding using CRT strtoul(..., 16) followed by an in-place byte reversal prior to execution. This routine swaps endianness across the entire decoded buffer, neutralizing static network extraction tools that expect standard byte-ordered shellcode or PE headers.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>iVar2 = memcmp(_Buf1, &quot;ace&quot;, 3); 
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>iVar2 = memcmp(_Buf1, "ace", 3); 
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>if ((iVar2 == 0) &amp;&amp; (uVar7 == 3)) { 
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    return 1; // Valid payload container 
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>} 
 </span></code></pre></div>
-<p>SpyGlace utilizes a dynamically resolved CreateStreamOnHGlobal pointer from ole32.dll to allocate the virtual memory stream for fileless .ace execution before scrubbing the temp file.
+<p>SpyGlace utilizes a dynamically resolved CreateStreamOnHGlobal pointer from ole32.dll to allocate the virtual memory stream for fileless .ace execution before scrubbing the temp file. This allows it to avoid requesting the highly scrutinized PAGE_EXECUTE_READWRITE permissions and the VirtualAlloc API, as well as blending into more standard COM operations.
 This temp file is always written to "%temp%\\wcts66889.tmp".</p>
 <p>It uses two instances of the same S-box set up mechanism, one for the fetch task-execute loop and another for the files downloaded from the remote beacon. This is because RC4 is a stateful stream cipher - which means it can't be reused between the two tasks. The main C2 beaconing loop (fetching tasks/payloads) and the named-pipe interactive shell operate asynchronously.</p>
 <h3 id="c2-command-list-named-pipe-ipc">C2 Command List &amp; Named Pipe IPC</h3>
@@ -937,12 +937,12 @@ This temp file is always written to "%temp%\\wcts66889.tmp".</p>
 <tr>
 <td style="text-align: center;"><code>proclist</code></td>
 <td style="text-align: center;">Process</td>
-<td style="text-align: center;">Enumerate active processes (reactivated from v3.1.14 stubs)</td>
+<td style="text-align: center;">(inactive from v3.1.14 stubs)</td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>prockill</code></td>
 <td style="text-align: center;">Process</td>
-<td style="text-align: center;">Terminate process by PID (reactivated from v3.1.14 stubs)</td>
+<td style="text-align: center;">(inactive from v3.1.14 stubs)</td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>diskinfo</code></td>
@@ -977,17 +977,17 @@ This temp file is always written to "%temp%\\wcts66889.tmp".</p>
 <tr>
 <td style="text-align: center;"><code>attach</code></td>
 <td style="text-align: center;">IPC</td>
-<td style="text-align: center;">Connect C2 dispatch to pipe <code>\\.\pipe\wincmd_*</code></td>
+<td style="text-align: center;">Start module</td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>detach</code></td>
 <td style="text-align: center;">IPC</td>
-<td style="text-align: center;">Disconnect C2 dispatch from named pipe</td>
+<td style="text-align: center;">Stop module</td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>screenupload</code></td>
 <td style="text-align: center;">Surveillance</td>
-<td style="text-align: center;">Invokes Protect.d DLL(mssc1 export) and posts timestamped .jpg to C2</td>
+<td style="text-align: center;">Invokes Protect.db DLL(mssc1 export) and posts timestamped .jpg to C2</td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>screenauto</code></td>
@@ -1093,7 +1093,7 @@ This temp file is always written to "%temp%\\wcts66889.tmp".</p>
 </tr>
 <tr>
 <td style="text-align: center;">Filesystem Path</td>
-<td style="text-align: center;">%LocalAppData%\Microsoft\Protect\Protect.d</td>
+<td style="text-align: center;">%LocalAppData%\Microsoft\Protect\Protect.db</td>
 <td style="text-align: center;"></td>
 </tr>
 <tr>
@@ -1124,20 +1124,20 @@ This temp file is always written to "%temp%\\wcts66889.tmp".</p>
 <h2 id="yara-rule">Yara Rule:</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>rule APT_C_60_SpyGlace_v3_1_15 {
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    meta:
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        description = &quot;Detects SpyGlace v3.1.15 backdoor artifacts and runtime strings&quot;
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        author = &quot;Vishwa Thothathri&quot;
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        date = &quot;2026-09-21&quot;
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        reference = &quot;https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2026.html&quot;
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        hash = &quot;7621e4eff855b2679188b33fe4c71c377f6e2d0b9c25d939452e18992c52e067&quot;
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        description = "Detects SpyGlace v3.1.15 backdoor artifacts and runtime strings"
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        author = "Vishwa Thothathri"
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        date = "2026-09-21"
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        reference = "https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2026.html"
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        hash = "7621e4eff855b2679188b33fe4c71c377f6e2d0b9c25d939452e18992c52e067"
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    strings:
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        $pipe = &quot;\\\\.\\pipe\\wincmd_&quot; ascii wide
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        $pipe = "\\\\.\\pipe\\wincmd_" ascii wide
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        // Obfuscated additive verification tag: `gghwhud
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        $additive = { 60 67 67 68 77 68 75 64 }
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        $xor = { 66 83 f0 02 66 ff c8 }
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        $ace = &quot;.ace&quot; ascii
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        $export = &quot;mssc1&quot; ascii
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>        $cmd_turn_on = &quot;vupl\&quot;sl&quot; ascii
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        $ace = "ace" ascii
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        $export = "mssc1" ascii
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>        $cmd_turn_on = "vupl\"sl" ascii
 </span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    condition:
 </span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>        uint16(0) == 0x5A4D and
 </span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>        (5 of them)
