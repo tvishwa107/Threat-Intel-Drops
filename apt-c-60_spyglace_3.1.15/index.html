@@ -381,15 +381,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#technical-overview-spyglace-v3115-evolution" class="md-nav__link">
+  <a href="#technical-overview-spyglace-v3115" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technical Overview: SpyGlace v3.1.15 Evolution
+        Technical Overview: SpyGlace v3.1.15
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Technical Overview: SpyGlace v3.1.15 Evolution">
+    <nav class="md-nav" aria-label="Technical Overview: SpyGlace v3.1.15">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -598,15 +598,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#technical-overview-spyglace-v3115-evolution" class="md-nav__link">
+  <a href="#technical-overview-spyglace-v3115" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technical Overview: SpyGlace v3.1.15 Evolution
+        Technical Overview: SpyGlace v3.1.15
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Technical Overview: SpyGlace v3.1.15 Evolution">
+    <nav class="md-nav" aria-label="Technical Overview: SpyGlace v3.1.15">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -796,7 +796,7 @@
 <p><figure id="_figure-1"><img alt="Jsdeliver OpenDirectory Containing SpyGlace Artifacts" src="../img/jsdelivr_opendir.png"><figcaption>Figure 1: Jsdeliver OpenDirectory Containing SpyGlace Artifacts</figcaption></figure></p>
 <p>This opendir contains several files - one base64 encoded payload in sub7/contributing.txt (449.49KB) - this eventually decodes to SpyGlace v3.1.15. </p>
 <p>One of the files I captured had a sha256 that matched a known one from the JP cert blog, but the file itself was garbled/encoded data. BUT the bytes repeated, which determined that this file was XOR-encrypted, and the 20 byte repetition suggested that was the length of the key. The XOR key was appended to the head of the file ("sgznqhtgnghvmzxponum"), and when XOR-ed, we see the first few bytes are 4D 5A 90 00 (MZ header).</p>
-<h2 id="technical-overview-spyglace-v3115-evolution">Technical Overview: SpyGlace v3.1.15 Evolution</h2>
+<h2 id="technical-overview-spyglace-v3115">Technical Overview: SpyGlace v3.1.15</h2>
 <p>SpyGlace contains functionalities to perform screen captures, kill existing processes, exfiltrate system data, and file system wiping. It also uses a named pipe for real-time command dispatch from the C2 server, and supports loading additional DLL beacons from the C2 with other unnamed capabilities. Where JPCERT's July 2026 report found no major functional differences across v3.1.15–3.1.18, my analysis of this v3.1.15 sample surfaced a few features that, to the best of my knowledge, don't appear in any public analyses, new or old.</p>
 <h3 id="key-findings">Key Findings:</h3>
 <ol>
