@@ -13,7 +13,10 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
   - tables
+  - md_in_html
 
 plugins:
   - search
   - timetoread
+  - caption:
+      figure_caption_prefix: "Figure {index}: " 

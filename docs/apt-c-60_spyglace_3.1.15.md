@@ -1,10 +1,10 @@
-# APT-C-60 Attacks Japanese Organizations Using New SpyGlace Backdoor Capabilities
+# APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
 
 
 
 ## Introductory Analysis:
 
-This edition of threat hunting/analysis will be delving into reverse engineering some malware we were able to obtain - SpyGlace v3.1.15. SpyGlace is a backdoor attributed to APT-C-60, targeting Japanese entities. The objective of this analysis will be restricted to purely static reversing, so minimal dynamic data will be obtained in this way, only referencing public sandboxing for relevant data. 
+This edition of threat hunting/analysis will be delving into reverse engineering some malware we were able to obtain - SpyGlace v3.1.15. SpyGlace is a Windows backdoor attributed to APT-C-60, targeting Japanese entities. The objective of this analysis will be restricted to purely static reversing, so minimal dynamic data will be obtained in this way, only referencing public sandboxing for relevant data. 
 
 Appendix E of the source blog: [https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2026.html](https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2026.html), contains a number of github pages which are still active, and I was able to obtain a number of the files. 
 
@@ -12,7 +12,7 @@ Appendix E of the source blog: [https://blogs.jpcert.or.jp/en/2026/07/apt-c-60_2
 https[:]//cdn.jsdelivr[.]net/gh/mei1990789/class125/
 ```
 
-![Jsdeliver OpenDir](img/jsdelivr_opendir.png)
+![Jsdeliver OpenDirectory Containing SpyGlace Artifacts](img/jsdelivr_opendir.png)
 
 This opendir contains several files - one base64 encoded payload in sub7/contributing.txt (449.49KB) - this eventually decodes to SpyGlace v3.1.15. 
 
@@ -22,19 +22,19 @@ One of the files I captured had a sha256 that matched a known one from the JP ce
 
 ## Technical Overview: SpyGlace v3.1.15 Evolution
 
-SpyGlace contains functionalities to perform screen captures, kill existing processes, exfiltrate system data, and file system wiping. It also uses a named pipe for real-time command dispatch from the C2 server, and supports loading additional DLL beacons from the C2 with other unnamed capabilities. Where JPCERT's July 2026 report found no major functional differences across v3.1.15–3.1.18, my reverse engineering of this v3.1.15 sample surfaced a few features that, to the best of my knowledge, don't appear in any public analyses.
+SpyGlace contains functionalities to perform screen captures, kill existing processes, exfiltrate system data, and file system wiping. It also uses a named pipe for real-time command dispatch from the C2 server, and supports loading additional DLL beacons from the C2 with other unnamed capabilities. Where JPCERT's July 2026 report found no major functional differences across v3.1.15–3.1.18, my analysis of this v3.1.15 sample surfaced a few features that, to the best of my knowledge, don't appear in any public analyses, new or old.
 
 
 ### Key Findings:
-1. Interactive Named-Pipe IPC (\\\\.\pipe\wincmd_*): Decouples command execution from single-shot cmd.exe /c processes, maintaining persistent standard I/O streams across commands. This has not been reported previously. 
+1. Interactive Named-Pipe IPC (\\\\.\pipe\wincmd_*): Decouples command execution from single-shot cmd.exe /c processes, maintaining persistent standard I/O streams across commands. 
 
 2. Structured C2 Wire Protocol: Employs parameter multiplexing across three distinct functional pipelines (command execution logs, single-transaction screenshots, and multi-part chunked file uploads).
 
-3. Strict Staging Constraints: Requires secondary stages from the C2 to pass an explicit .ace container check, multi-layer decoding (RC4 → Base64 → hex decode → in-place byte reversal), deliberately breaking tools that expect standard PE/shellcode byte ordering in transit.
+3. Strict Staging Constraints: Requires secondary payloads from the C2 to pass an explicit .ace container check, multi-layer decoding (RC4 → Base64 → hex decode → in-place byte reversal), deliberately breaking tools that expect standard PE/shellcode byte ordering in transit.
 
 4. Can use fileless invocation using CreateStreamOnHGlobal, which is loaded dynamically from ole32.dll, alternatively staging payloads briefly through a fixed temp path (%temp%\wcts66889.tmp) before file deletion. Each loaded plugin has an 'extension' export to start, and a 'stopextension' export used to kill the DLL. 
 
-5. Disguised Companion Plugins (Protect.d): Dynamically loads a hidden companion library under %LocalAppData%\Microsoft\Protect\Protect.d to orchestrate surveillance features like screen capture.
+5. Disguised Companion Plugins (Protect.db): Dynamically loads a hidden companion library dropped to %LocalAppData%\Microsoft\Protect\Protect.db to orchestrate surveillance features like screen capture.
 
 6. The sample resolves all Windows APIs via manual PEB/export-table walking and encrypted string comparisons, not the IAT - only KERNEL32.dll appears as a static import. 
 
@@ -81,11 +81,12 @@ or
 Plaintext(c)=((c⊕2)-1) 
 ```
 
+
 Notably, for winhttp.dll exports, SpyGlace employs a pairwise consonant-transposition cipher (e.g., [ilJvvrSrel decodes to WinHttpOpen, and [ilJvvrWevSrvisl decodes to WinHttpSetOption). 
 
 
 #### Environmental Fingerprinting & Persistence:
-Multiple evasion checks query the registry to fingerprint the host environment:
+Multiple evasion checks query the Windows registry to fingerprint the host environment, these are also used as part of the beacon to Statcounter:
 
 - Processor Name
 "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "ProcessorNameString"
@@ -98,7 +99,7 @@ Multiple evasion checks query the registry to fingerprint the host environment:
 - Registry checks for Operating System including Service Pack Level
 "CSDVersion", "InstallDate", "ProductName"
 
-The malware writes itself to registry autostart keys to establish persistence and drops its internal version string (v3.1.15) as a registry value.
+The malware writes itself to registry autostart keys to establish persistence and drops its internal version string (v3.1.15) as a registry value - which are artifacts worth looking for.
 
 ![Establishing Persistence Through Registry](img/persistence.png)
 
@@ -119,10 +120,9 @@ Active C2 endpoints: x66hjl.asp, fx72rf.asp, guehry.asp, dmd4n2.asp
 
 ![Spyglace C2 Endpoints](img/spyglace_c2_beacons.png)
 
-During request construction, the implant invokes WinHttpSetOption on the active request handle (HINTERNET) with option 0x1f (WINHTTP_OPTION_SECURITY_FLAGS) and a value mask of 0x3300, which ignores certificate validity issues and communicates through any interception proxies. 
+During request construction, the implant invokes WinHttpSetOption on the active request handle, ignoring certificate validity issues and communicating through any interception proxies using option 0x1f (WINHTTP_OPTION_SECURITY_FLAGS) and a value mask of 0x3300. 
 
 
- 
 
 #### C2 Communication Protocols: 
 
@@ -163,9 +163,9 @@ Before loading secondary modules or executing downloaded tasks, the binary parse
 
 ![Run powershell scripts in-memory](img/run_powershell.png)
 
-For desktop surveillance, the malware targets %LocalAppData%\Microsoft\Protect\Protect.d. It loads a specific DLL via LoadLibraryW, and calls unmanaged export "mssc1". The resulting raw screen capture is saved as <YYYYMMDD_HHMMSS>.jpg, encrypted, and posted to the C2.
+For desktop surveillance, the malware targets %LocalAppData%\Microsoft\Protect\Protect.db. It loads a specific DLL via LoadLibraryW, and calls unmanaged export "mssc1". The resulting raw screen capture is saved as <YYYYMMDD_HHMMSS>.jpg, encrypted, and posted to the C2.
 
-![Protect.d DLL uses to perform screencaptures](img/screencap_dll_protect_d.png)
+![Protect.db DLL uses to perform screencaptures](img/screencap_dll_protect_d.png)
 
 The secondary payloads are decoded using a full RC4 implementation that SpyGlace contains, where the command/response data is encrypted, then converted to Base64, and then undergo hex decoding using CRT strtoul(..., 16) followed by an in-place byte reversal prior to execution. This routine swaps endianness across the entire decoded buffer, neutralizing static network extraction tools that expect standard byte-ordered shellcode or PE headers.
 
@@ -176,7 +176,7 @@ if ((iVar2 == 0) && (uVar7 == 3)) {
 } 
 ```
 
-SpyGlace utilizes a dynamically resolved CreateStreamOnHGlobal pointer from ole32.dll to allocate the virtual memory stream for fileless .ace execution before scrubbing the temp file.
+SpyGlace utilizes a dynamically resolved CreateStreamOnHGlobal pointer from ole32.dll to allocate the virtual memory stream for fileless .ace execution before scrubbing the temp file. This allows it to avoid requesting the highly scrutinized PAGE_EXECUTE_READWRITE permissions and the VirtualAlloc API, as well as blending into more standard COM operations.
 This temp file is always written to "%temp%\\\\wcts66889.tmp".
 
 
@@ -187,17 +187,17 @@ It uses two instances of the same S-box set up mechanism, one for the fetch task
 |Command| Type|Behavior|
 | :---: | :---: |:---: |
 | `procspawn` | Process | Spawn child process via native API |
-| `proclist` | Process | Enumerate active processes (reactivated from v3.1.14 stubs) |
-| `prockill` | Process | Terminate process by PID (reactivated from v3.1.14 stubs) |
+| `proclist` | Process |  (inactive from v3.1.14 stubs) |
+| `prockill` | Process | (inactive from v3.1.14 stubs) |
 | `diskinfo` | Discovery | Enumerate disk drives, filesystem type, available space |
 | `downfree` | Staging | Retrieve payload from C2 and write to disk |
 | `download` | Staging | Download encrypted payload, execute from %temp% and delete |
 | `upload` | Exfiltration | Exfiltrate target file to C2 |
 | `cancel` | Control | Abort active data transfer or pipeline execution |
 | `cmd` | Shell | Spawn interactive shell |
-| `attach` | IPC | Connect C2 dispatch to pipe `\\.\pipe\wincmd_*`|
-| `detach` | IPC | Disconnect C2 dispatch from named pipe |
-| `screenupload` | Surveillance | Invokes Protect.d DLL(mssc1 export) and posts timestamped .jpg to C2|
+| `attach` | IPC | Start module|
+| `detach` | IPC | Stop module |
+| `screenupload` | Surveillance | Invokes Protect.db DLL(mssc1 export) and posts timestamped .jpg to C2|
 | `screenauto` | Surveillance | Initialize automated periodic screenshot capture |
 | `cd` | Filesystem | Change working directory |
 | `ddir` | Filesystem | Enumerate directory contents |
@@ -224,7 +224,7 @@ It uses two instances of the same S-box set up mechanism, one for the fetch task
 |Endpoint|/gd5jc6/dmd4n2.asp ||
 |Named Pipe|\\.\pipe\wincmd_* ||
 |Staged Containers|.ace||
-|Filesystem Path|%LocalAppData%\Microsoft\Protect\Protect.d ||
+|Filesystem Path|%LocalAppData%\Microsoft\Protect\Protect.db ||
 |Mutex|K31610KIO9834PG79787|Decrypts to H02321HJL:905QD4:494||
 
 
@@ -280,7 +280,7 @@ rule APT_C_60_SpyGlace_v3_1_15 {
         // Obfuscated additive verification tag: `gghwhud
         $additive = { 60 67 67 68 77 68 75 64 }
         $xor = { 66 83 f0 02 66 ff c8 }
-        $ace = ".ace" ascii
+        $ace = "ace" ascii
         $export = "mssc1" ascii
         $cmd_turn_on = "vupl\"sl" ascii
     condition:
