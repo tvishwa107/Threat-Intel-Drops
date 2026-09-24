@@ -19,7 +19,7 @@ One of the files I captured had a sha256 that matched a known one from the JP ce
 
 
 
-## Technical Overview: SpyGlace v3.1.15 Evolution
+## Technical Overview: SpyGlace v3.1.15
 
 SpyGlace contains functionalities to perform screen captures, kill existing processes, exfiltrate system data, and file system wiping. It also uses a named pipe for real-time command dispatch from the C2 server, and supports loading additional DLL beacons from the C2 with other unnamed capabilities. Where JPCERT's July 2026 report found no major functional differences across v3.1.15–3.1.18, my analysis of this v3.1.15 sample surfaced a few features that, to the best of my knowledge, don't appear in any public analyses, new or old.
 
