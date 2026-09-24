@@ -1,7 +1,6 @@
 # APT-C-60 Attacks Japanese Organizations Using SpyGlace Backdoor Capabilities
 
 
-
 ## Introductory Analysis:
 
 This edition of threat hunting/analysis will be delving into reverse engineering some malware we were able to obtain - SpyGlace v3.1.15. SpyGlace is a Windows backdoor attributed to APT-C-60, targeting Japanese entities. The objective of this analysis will be restricted to purely static reversing, so minimal dynamic data will be obtained in this way, only referencing public sandboxing for relevant data. 
@@ -30,7 +29,7 @@ SpyGlace contains functionalities to perform screen captures, kill existing proc
 
 2. Structured C2 Wire Protocol: Employs parameter multiplexing across three distinct functional pipelines (command execution logs, single-transaction screenshots, and multi-part chunked file uploads).
 
-3. Strict Staging Constraints: Requires secondary payloads from the C2 to pass an explicit .ace container check, multi-layer decoding (RC4 → Base64 → hex decode → in-place byte reversal), deliberately breaking tools that expect standard PE/shellcode byte ordering in transit.
+3. Strict Staging Constraints: Requires secondary payloads from the C2 to pass an explicit .ace filename check, multi-layer decoding (RC4 → Base64 → hex decode → in-place byte reversal), deliberately breaking tools that expect standard PE/shellcode byte ordering in transit.
 
 4. Can use fileless invocation using CreateStreamOnHGlobal, which is loaded dynamically from ole32.dll, alternatively staging payloads briefly through a fixed temp path (%temp%\wcts66889.tmp) before file deletion. Each loaded plugin has an 'extension' export to start, and a 'stopextension' export used to kill the DLL. 
 
@@ -157,7 +156,7 @@ SpyGlace is also able to wipe a directory or file as needed after exfiltration, 
 ![System Wipe Functionality](img/file_identify_recurse_delete.png)
 
 #### Staging & Payload Refinements:
-Before loading secondary modules or executing downloaded tasks, the binary parses the filename, performs a reverse search for the extension delimiter (.), and enforces an explicit match against .ace. Any stage not bearing the .ace extension is discarded. This .ace file is then extracted and inner .dll, .dat, .exe, .db files can be run as additional plugins/stages using rundll32. The malware also supports fileless memory loading for remote PowerShell scripts.
+Before loading secondary modules or executing downloaded tasks, the binary parses the filename, performs a reverse search for the extension delimiter (.), and enforces an explicit match against .ace. Any stage not bearing the .ace extension is discarded. Inner .dll, .dat, .exe, .db files can be run as additional plugins/stages using rundll32. The malware also supports fileless memory loading for remote PowerShell scripts.
 
 ![Functionality to Run DLLs](img/run_dll_plugin.png)
 
