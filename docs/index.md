@@ -3,6 +3,7 @@ Hi! I'm Vishwa, a malware researcher and threat hunter by day, and the same by n
 
 Here's some of the latest stuff!
 
+* [Autonomous AI Framework Hunting](Autonomous_AI_Hunting.md)
 * [SpyGlace v3.1.15 - APT-C-60 Tradecraft Malware Analysis](apt-c-60_spyglace_3.1.15.md)
 * [Mirage Kitten / Nimbus Manticore - 1 hour hunt](Mirage_Kitten_1hr.md)
 * [Webamon Showcase - Silver Fox Indian Tax Lures and EvilTokens](https://intel.webamon.com/blog/eviltokens-and-a-long-running-india-tax-lure)
